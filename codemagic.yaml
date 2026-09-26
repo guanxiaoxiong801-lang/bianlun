@@ -34,6 +34,5 @@ workflows:
       email:
         recipients:
           - user@example.com   # ← 改成你的邮箱
-      slack: {}
       # 构建产物（ipa）在 Codemagic 构建页的 Artifacts 里，
       # Ad Hoc 包会附带安装清单，手机打开邮件链接即可安装。

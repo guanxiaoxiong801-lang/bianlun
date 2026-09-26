@@ -22,6 +22,7 @@ targets:
   DebateHub:
     type: application
     platform: iOS
+    bundleId: com.debatehub.bianlun
     sources:
       - App
     resources:

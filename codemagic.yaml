@@ -1,0 +1,39 @@
+# Codemagic 云构建配置（DebateHub 原生 iOS）
+# 使用方法见 docs/原生iOS构建指南.md：
+#   1) 把 debatehub-ios/ 作为仓库根推送到 GitLab.com 私有项目（国内可直连）
+#   2) codemagic.io 用 GitHub 登录 → 添加应用 → 选择本仓库与该 YAML
+#   3) 环境变量里配置 App Store Connect API Key（Codemagic 自动签名用）
+#   4) 启动工作流 ios-adhoc → 构建完成后 Codemagic 邮件发送安装链接（手机直接装）
+
+workflows:
+  ios-adhoc:
+    name: DebateHub iOS (Ad Hoc)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      xcode: latest
+      ios_signing:
+        distribution_type: ad_hoc
+        bundle_identifier: com.debatehub.DebateHub
+      vars:
+        TEAM_ID: 978G2M54F7
+    scripts:
+      - name: 安装 XcodeGen 并生成工程
+        script: |
+          brew install xcodegen
+          cd $CM_BUILD_DIR
+          xcodegen generate
+      - name: 构建并导出 Ad Hoc ipa
+        script: |
+          cd $CM_BUILD_DIR
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --project DebateHub.xcodeproj \
+            --scheme DebateHub
+    publishing:
+      email:
+        recipients:
+          - user@example.com   # ← 改成你的邮箱
+      slack: {}
+      # 构建产物（ipa）在 Codemagic 构建页的 Artifacts 里，
+      # Ad Hoc 包会附带安装清单，手机打开邮件链接即可安装。

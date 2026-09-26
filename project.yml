@@ -1,0 +1,45 @@
+# DebateHub iOS —— XcodeGen 工程描述
+# 用法（需 macOS）：brew install xcodegen && xcodegen generate
+# CI（Codemagic）会自动执行同样步骤。
+name: DebateHub
+options:
+  bundleIdPrefix: com.debatehub
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: "978G2M54F7"
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+    INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+    INFOPLIST_KEY_CFBundleDisplayName: 辩坛AI
+targets:
+  DebateHub:
+    type: application
+    platform: iOS
+    sources:
+      - App
+    resources:
+      - Resources/Assets.xcassets
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: 辩坛AI
+        ITSAppUsesNonExemptEncryption: false
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: false
+schemes:
+  DebateHub:
+    build:
+      targets:
+        DebateHub: all
+    run:
+      config: Debug

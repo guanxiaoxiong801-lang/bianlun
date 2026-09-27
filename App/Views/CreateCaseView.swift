@@ -13,7 +13,8 @@ struct CreateCaseView: View {
     @State private var defendantSide = ""
     @State private var maxRounds = 3
     @State private var models: [ModelInfo] = []
-    @State private var pickedModel: String?
+    @State private var plaintiffModel: String?
+    @State private var defendantModel: String?
     @State private var submitting = false
     @State private var error = ""
     @State private var doneCaseId: String?
@@ -51,13 +52,22 @@ struct CreateCaseView: View {
                             .foregroundStyle(Theme.gold)
                     }
                 }
-                Section("模型") {
-                    Picker("辩论模型", selection: $pickedModel) {
-                        Text("自动（服务端按角色路由）").tag(String?.none)
+                Section("辩论模型") {
+                    Picker("正方模型", selection: $plaintiffModel) {
+                        Text("自动（服务端路由）").tag(String?.none)
                         ForEach(models) { m in
                             Text("\(m.vendor) / \(m.modelName)").tag(String?.some(m.preset))
                         }
                     }
+                    Picker("反方模型", selection: $defendantModel) {
+                        Text("自动（服务端路由）").tag(String?.none)
+                        ForEach(models) { m in
+                            Text("\(m.vendor) / \(m.modelName)").tag(String?.some(m.preset))
+                        }
+                    }
+                    Text("正反方可接不同模型对辩；裁判团由服务端异构路由")
+                        .font(.caption)
+                        .foregroundStyle(Theme.textSub)
                 }
                 Section {
                     Button {
@@ -100,7 +110,14 @@ struct CreateCaseView: View {
         submitting = true
         defer { submitting = false }
         do {
-            let override: [String: Any]? = pickedModel.map { ["primary": $0] }
+            // 正反方各自模型 → per-role 覆盖；选“自动”的一方走服务端路由
+            var override: [String: Any]?
+            if plaintiffModel != nil || defendantModel != nil {
+                var roles: [String: Any] = [:]
+                if let pm = plaintiffModel { roles["plaintiff"] = ["primary": pm] }
+                if let dm = defendantModel { roles["defendant"] = ["primary": dm] }
+                override = roles
+            }
             doneCaseId = try await api.createCase(
                 title: title.trimmingCharacters(in: .whitespaces),
                 description: description.trimmingCharacters(in: .whitespaces),

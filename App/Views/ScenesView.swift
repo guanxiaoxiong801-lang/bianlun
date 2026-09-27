@@ -51,7 +51,7 @@ struct ScenesView: View {
             }
         }
         .refreshable {
-            user = try? APIClient.shared.me()
+            user = try? await APIClient.shared.me()
         }
     }
 

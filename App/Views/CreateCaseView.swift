@@ -14,8 +14,8 @@ struct CreateCaseView: View {
     @State private var maxRounds = 3
     @State private var models: [ModelInfo] = []
     @State private var modelsLoaded = false
-    @State private var plaintiffModel: String?
-    @State private var defendantModel: String?
+    @State private var plaintiffModel = ""   // 空 = 自动（服务端路由）
+    @State private var defendantModel = ""   // 空 = 自动
     @State private var submitting = false
     @State private var error = ""
     @State private var doneCaseId: String?
@@ -42,12 +42,15 @@ struct CreateCaseView: View {
             }
             Section("辩题") {
                 TextField("例如：公司单方解除劳动合同是否合法", text: $title)
+                    .keyboardDoneButton()
                 TextField("背景描述（事实经过、争议起因）", text: $description, axis: .vertical)
                     .lineLimit(3...5)
             }
             Section("双方立场") {
                 TextField("正方立场（必填）", text: $plaintiffSide)
+                    .keyboardDoneButton()
                 TextField("反方立场（选填，可由 AI 归纳）", text: $defendantSide)
+                    .keyboardDoneButton()
             }
             Section("深度") {
                 Stepper("辩论轮次：\(maxRounds) 轮", value: $maxRounds, in: 1...9)
@@ -59,23 +62,24 @@ struct CreateCaseView: View {
                 }
             }
             Section("辩论模型") {
-                    Picker("正方模型", selection: $plaintiffModel) {
-                        Text("自动（服务端路由）").tag(String?.none)
-                        ForEach(models) { m in
-                            Text("\(m.modelName)").tag(String?.some(m.preset))
-                        }
+                Picker("正方模型", selection: $plaintiffModel) {
+                    Text("自动（服务端路由）").tag("")
+                    ForEach(models) { m in
+                        Text(m.modelName).tag(m.preset)
                     }
-                    Picker("反方模型", selection: $defendantModel) {
-                        Text("自动（服务端路由）").tag(String?.none)
-                        ForEach(models) { m in
-                            Text("\(m.modelName)").tag(String?.some(m.preset))
-                        }
+                }
+                .pickerStyle(.menu)
+                Picker("反方模型", selection: $defendantModel) {
+                    Text("自动（服务端路由）").tag("")
+                    ForEach(models) { m in
+                        Text(m.modelName).tag(m.preset)
                     }
-                    Text("正反方可接不同模型对辩；裁判团由服务端异构路由")
-                        .font(.caption)
-                        .foregroundStyle(Theme.textSub)
-            }
-            Section {
+                }
+                .pickerStyle(.menu)
+                Text("正反方可接不同模型对辩；裁判团由服务端异构路由")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textSub)
+            }            Section {
                 Button {
                     Task { await submit() }
                 } label: {
@@ -98,7 +102,7 @@ struct CreateCaseView: View {
                 }
             }
         }
-        .hideKeyboardOnTap()
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle("发起辩论")
         .task { await loadAll() }
         .navigationDestination(isPresented: $pushDebate) {
@@ -157,10 +161,10 @@ struct CreateCaseView: View {
         do {
             // 正反方各自模型 → per-role 覆盖；选“自动”的一方走服务端路由
             var override: [String: Any]?
-            if plaintiffModel != nil || defendantModel != nil {
+            if !plaintiffModel.isEmpty || !defendantModel.isEmpty {
                 var roles: [String: Any] = [:]
-                if let pm = plaintiffModel { roles["plaintiff"] = ["primary": pm] }
-                if let dm = defendantModel { roles["defendant"] = ["primary": dm] }
+                if !plaintiffModel.isEmpty { roles["plaintiff"] = ["primary": plaintiffModel] }
+                if !defendantModel.isEmpty { roles["defendant"] = ["primary": defendantModel] }
                 override = roles
             }
             doneCaseId = try await api.createCase(

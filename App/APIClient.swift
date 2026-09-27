@@ -12,7 +12,7 @@ final class APIClient {
 
     /// 后端地址：编译期写死（App 内不暴露、不可改、用户零操作）。
     /// 更换后端 = 改这里的常量后重新构建。
-    static let defaultBaseURL = "https://debatehub-backend.vercel.app"
+    static let defaultBaseURL = "https://arrange-calls-midwest-inspection.trycloudflare.com"
 
     private(set) var baseURL: String = APIClient.defaultBaseURL
 

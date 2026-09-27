@@ -46,7 +46,7 @@ struct DebateView: View {
             }
         }
         .task { await loadAll() }
-        .onDisappear { pollTask?.cancel() }
+        .onDisappear { engine.running = false }
     }
 
     private var progressBar: some View {

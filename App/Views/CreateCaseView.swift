@@ -59,14 +59,6 @@ struct CreateCaseView: View {
                 }
             }
             Section("辩论模型") {
-                if models.isEmpty {
-                    HStack {
-                        Text(modelsLoaded ? "模型列表为空" : "正在加载模型…")
-                            .foregroundStyle(Theme.textSub)
-                        Spacer()
-                        Button("重试") { Task { await loadModels() } }
-                    }
-                } else {
                     Picker("正方模型", selection: $plaintiffModel) {
                         Text("自动（服务端路由）").tag(String?.none)
                         ForEach(models) { m in
@@ -82,7 +74,6 @@ struct CreateCaseView: View {
                     Text("正反方可接不同模型对辩；裁判团由服务端异构路由")
                         .font(.caption)
                         .foregroundStyle(Theme.textSub)
-                }
             }
             Section {
                 Button {
@@ -122,10 +113,39 @@ struct CreateCaseView: View {
     }
 
     private func loadModels() async {
-        do {
-            models = try await api.models().filter { $0.enabled && $0.available }
-        } catch {
-            models = []
+        // 内置模型清单（不依赖网络接口；服务端注册表已含同名 preset，路由可用）
+        let builtin: [ModelInfo] = [
+            ModelInfo(preset: "gpt-luna", kind: "custom", vendor: "custom",
+                      modelName: "gpt-5.6-luna（轻量·最快最省）", enabled: true,
+                      available: true, promptPer1kUsd: 0.000044,
+                      completionPer1kUsd: 0.000264, description: "极致性价比"),
+            ModelInfo(preset: "gpt-terra", kind: "custom", vendor: "custom",
+                      modelName: "gpt-5.6-terra（平衡）", enabled: true,
+                      available: true, promptPer1kUsd: 0.00044,
+                      completionPer1kUsd: 0.00264, description: "平衡质量与成本"),
+            ModelInfo(preset: "gpt-54mini", kind: "custom", vendor: "custom",
+                      modelName: "gpt-5.4-mini（轻快）", enabled: true,
+                      available: true, promptPer1kUsd: 0.000165,
+                      completionPer1kUsd: 0.00099, description: "轻量快速"),
+            ModelInfo(preset: "gpt-54", kind: "custom", vendor: "custom",
+                      modelName: "gpt-5.4（长文本）", enabled: true,
+                      available: true, promptPer1kUsd: 0.00055,
+                      completionPer1kUsd: 0.0033, description: "1M 超长上下文"),
+            ModelInfo(preset: "gpt-55", kind: "custom", vendor: "custom",
+                      modelName: "gpt-5.5（旗舰）", enabled: true,
+                      available: true, promptPer1kUsd: 0.0011,
+                      completionPer1kUsd: 0.0066, description: "综合能力最强"),
+            ModelInfo(preset: "gpt-sol", kind: "custom", vendor: "custom",
+                      modelName: "gpt-5.6-sol（顶级质量）", enabled: true,
+                      available: true, promptPer1kUsd: 0.0011,
+                      completionPer1kUsd: 0.0066, description: "极致质量要求"),
+        ]
+        // 在线拉取成功则用服务端列表；失败回落到内置清单（永不空）
+        if let remote = try? await api.models().filter({ $0.enabled && $0.available }),
+           !remote.isEmpty {
+            models = remote
+        } else {
+            models = builtin
         }
         modelsLoaded = true
     }

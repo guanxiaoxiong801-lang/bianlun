@@ -31,6 +31,8 @@ struct DebateView: View {
             PixelCourtView(speaker: speaker, text: lastOutput,
                            stepText: stepTotal > 0 ? "\(stepIndex)/\(stepTotal)" : status,
                            hpPlaintiff: hpP, hpDefendant: hpD, objection: objection)
+                .frame(height: 240)
+                .clipped()
             progressBar
             messageList
             interruptBar
@@ -133,6 +135,8 @@ struct DebateView: View {
             verdictReady = c.verdict != nil
             if c.status == "completed" { await refreshHP() }
             if status == "running" { startPolling() }
+            // 创建后进入本页即自动开始：无需用户再点“开始辩论”
+            if status == "pending" { startPolling() }
         } catch {
             self.error = (error as? LocalizedError)?.errorDescription ?? "加载失败"
         }

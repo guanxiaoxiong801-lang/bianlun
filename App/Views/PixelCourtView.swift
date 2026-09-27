@@ -45,13 +45,13 @@ struct PixelCourtView: View {
             }
         }
         .background(Color(red: 0.04, green: 0.07, blue: 0.13))
-        .onChange(of: text) { _, newValue in
+        .onChange(of: text) { newValue in
             if newValue != lastText {
                 lastText = newValue
                 typeStart = .now
             }
         }
-        .onChange(of: objection) { _, isObj in
+        .onChange(of: objection) { isObj in
             if isObj { objectionUntil = .now.addingTimeInterval(1.4) }
         }
     }

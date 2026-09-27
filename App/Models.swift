@@ -48,6 +48,7 @@ struct DebateMessage: Codable, Identifiable {
     var stage: String
     var content: String
     var round: Int
+    var model: String?
     var kbRefs: [String]?
 
     var id: String { "\(speaker)-\(stage)-\(round)-\(content.hashValue)" }

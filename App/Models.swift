@@ -9,7 +9,7 @@ struct HealthInfo: Codable {
     var availableVendors: [String]
 }
 
-struct ScenarioInfo: Codable, Identifiable {
+struct ScenarioInfo: Codable, Identifiable, Hashable {
     var scenarioId: String
     var name: String
     var archetype: String

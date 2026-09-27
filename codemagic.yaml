@@ -88,3 +88,5 @@ workflows:
       email:
         recipients:
           - guanht@china-yida.com
+    artifacts:
+      - bianlun.ipa

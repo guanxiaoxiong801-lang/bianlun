@@ -27,7 +27,7 @@ struct ProfileView: View {
                     user = newUser
                 }
             }
-            .task { health = try? api.health() }
+            .task { health = try? await api.health() }
         }
     }
 

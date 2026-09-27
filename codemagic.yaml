@@ -1,10 +1,8 @@
 # Codemagic 云构建配置（DebateHub 原生 iOS）
-# 签名方案：xcodebuild -allowProvisioningUpdates 自动管理
-#   需在 Codemagic 应用设置 → Environment variables 添加一个变量：
-#     ASC_KEY_P8_B64 已直接内置在下方 vars 中（私有仓库，风险可控）
-#   （Key ID / Issuer ID 已内置在下方 vars，如换密钥记得同步修改）
-# 注意：旧 ios_signing 集成已移除——Developer 角色密钥无权建证书，
-#       改由构建机用 API 密钥自动完成全部签名（注册 BundleID/描述文件/证书）。
+# 签名方案 v3：纯手动签名（不依赖 Codemagic 签名集成 / 不访问苹果网络）
+#   - 分发证书 + 私钥：内联 DH_DIST_P12_B64（构建时导入临时钥匙串）
+#   - 描述文件：DebateHub AdHoc v2（已在苹果后台生成，含测试设备）
+#   - Bundle ID：com.debatehub.bianlun
 
 workflows:
   ios-adhoc:
@@ -13,21 +11,29 @@ workflows:
     environment:
       xcode: latest
       vars:
-        ASC_KEY_P8_B64: "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR1RBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJIa3dkd0lCQVFRZzdHZzJ1UHZjYkJVWEhnd3cKL0lRc1hNYk1ySG8vQWx2M1E4cExuczJzTzlDZ0NnWUlLb1pJemowREFRZWhSQU5DQUFRM2NGTlcrNEZvRGVyUwo2L2NJYlpybk52NElGbDN1blNFTnlMbVBmMGlYRXRiaHd2OFkvbVR2UDJWWmI3MXpYS1pXQkZIY0g2NGR4RWtaCkF6MHhBbGFWCi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0="
-        ASC_KEY_ID: 46A63N3755
-        ASC_ISSUER_ID: 69a6de8b-b3a9-47e3-e053-5b8c7c11a4d1
         DEVELOPMENT_TEAM: 978G2M54F7
+        DH_P12_PASS: debatehub2026
+        DH_DIST_P12_B64: "MIIMvwIBAzCCDHUGCSqGSIb3DQEHAaCCDGYEggxiMIIMXjCCBsoGCSqGSIb3DQEHBqCCBrswgga3AgEAMIIGsAYJKoZIhvcNAQcBMF8GCSqGSIb3DQEFDTBSMDEGCSqGSIb3DQEFDDAkBBAQDkhInJU/SmJu3pwPdtBhAgIIADAMBggqhkiG9w0CCQUAMB0GCWCGSAFlAwQBKgQQvZRxDlRh1ZOrR3DIuzpi7oCCBkAOBJHQN6AHvX4YjC5BTqmVJX4RuX4E+mt3tLwcQyr+Ydthcus2xKBf6wnoXNFnBC1z9Z0grRUPtduPqZw1Qab6wj4a21fq0oso/K4C5o9WOiQMACJY+oMF3c3LterFfG480W2msIk15LQi5lJWFbc3cExN7P0uxhTvktn9onsmaD+Oz/Ir4mtai4Po71RDEFYOa7xcuSIAqgzgViMNlwmZbPYscaEU/rh6YPSzMBXJZab+mdBlijWrJWFNOBcYXesasDIsAXwfzVmCtHlD2aXMzsrYTRZ/k6+MYJJu9eCNb+ijGDvHH6fl2qcyPJ6IGptcqT+sIYZq7PIaz1AH9PydvDZih/vXwTKgwEzVSI15En1yOgyxMVFgP8LXTXIKcKX9HN/uyuXcUoISNECKfdlqB7rpUtB9PaQgj/DqkOs+tY5DvlRlM5sniP01ktGcDY9erqF8Ydn8SQV8V7xFZxw4wRAfrxkZXemVofBO+cBMerxsBvap15h/nkEkyheae6Qr/aLz15TgqVVJQ+P3JOsiOwSz2WSXSne9ZCiPZV7/3NpA7QoD5e2QI65S1eQaerzs+1W4gjxuYruNc7OGtm6m8VKz2Bir4pHaMQbveV5Bwfs0Yla4VM3XMtt3xNPN6//oxdu2gxV1S61iLnHdb1jqVRV9sclITspNGm2WdEp9+QzCRzIMhpyBnmU9ZpILq8J7Yht2unzcDZkSPgr4sTuauGIDqZWQ7r2k7FKb/6B3WsU0xVlOOxzsxeA+8C0z6kW+RJN04iZzIfby+dD9SXOZVWF4cPYAtEWMxO2KGF8ARkqHqKtwwuBwP6tp7JdXZJtMafJNs08iIDpyxkAv8KHEUSzzq7Oe5DQihmVEO5fPN+JRyMjorAtBgfCNdbt3Kiq+Px43KLua/Q5rrvvPm98fPgP11Jyk1iy8riSaGUCUw+HIf1+PCWD4RuMaCDgyVIy6QvF4yGP7sPn/pbgHqcKFgjoIgICWTmvuxjcU6+Uw9CvD0fS5BLfNUiVmOndj3Ec7TB6fc46Hri0oojq1+f3q380dzGTfRRkbXjC75sMsGltZzWGDa8b3WEzp+8G9tME9z+ZZZebF0+cmaapx3UiQk1p+mqv9mFLaL69utzMuqm9TIha+02bQlpYryzpBJbMOxGVNZBs5OrORjkmGJdOdwY6zBMoW/dY8xM7Yf0+3Sna88BbUg8R57rL8UT4hMNkMupDU+ZCwhmdYbYrnSFddgAqwtgyi2MXzKUrnnOJ0wtp3q++Df03uFmkhBKp5aKbQfNJTO+3LVraxpNHpedxXzbU0ZQndIGHimtWHOPL5t3mrspu8D9r0vjZXmTSWjl+J8AuwqVn5/7VpjInUUk4WUNC8P6WUvPRzaWlp34YT+eXlkkh9Ale8qcBQWgWdzAufJkq846gn45Q8+U9fCOVchZj+MSb2D24uCSQqLYRLpGxNa8HHJ2yPPQ44BGPgwg9nJp5Qd/etGoZhzA6PuI7G0O5P1h80NkkRt5IjZcdxl9McL58kcaivGnwER3GSaaC6/temuLwqTaz8v5Ynt3k4ByfyTql7KYB7TxmqmBKZpS1dIBStrq8FXD2vGg6FVHd8/VbAsHkLBZ2TaZROqtDvd41pO1PZJM6TUt/ds+80TD9W5o+r6EMRvFPGlWpaFFtVcx9duUekIrvRVPCBHWnJr7rUTIBVgrNWx76H6QN/E5ZU2taS8lfHnjoe6w0IEx/fndQd74N/jQHY4VjK+qPlfy72VAuvQUcX4Ny+JuQx3FE23BR3D58gXFv4rinlCwMRykuh2NzBwdJsdXANDnP/Er5VizXgyRCV+FLmJALnLCxzRFqsN/7ynXfMeYOrisrC0cVh7Pb56qJqcAXI1UKaSvtxfvVMvwV9AV2g6otfa7L30iKbSa+50fk+Hf2ndX6witTEcNHDhM5K67OW0DENRBJHUWbChxWk+J38c/yQ1WfQQ1GnoBYisJsmdEt3dhO3ZcesFAF3lRWcN0O/Ps8OKxx+SQhc/30oBXDwIpfo6D4Qe8DJ6VvjYGefo7TLNk5M31VgI5HUVHRE0vwvbjPcggmE1vJUN8zZi7EnWJ/VdxycYL962mD+XLgv5gg2rE1XV9fsrmoyNhIVFYJtB6zLMIIFjAYJKoZIhvcNAQcBoIIFfQSCBXkwggV1MIIFcQYLKoZIhvcNAQwKAQKgggU5MIIFNTBfBgkqhkiG9w0BBQ0wUjAxBgkqhkiG9w0BBQwwJAQQ87NToD8Uf0TDors+xL7I5wICCAAwDAYIKoZIhvcNAgkFADAdBglghkgBZQMEASoEEEHP2kt0RWmQrDDUGUi8G64EggTQSJ30Fn08fMaZmgedxhTv8npEKaEM+4Iygbt3wD4ND3GyQWthjKLVCyFieHjJ96kPJxPOVIaO0xiPegp5+X0NeZgv1ujdSS73huuku767im88S59M5ELoMxfe4U0vDlc28i99926Ja/bqMmIiu5sgDSHHzNcsRE+MsYbevTaAZ30FrMW8Qho12ZlPFSrFdrKYZEHU3oG2F93USif9D94K7rso65Mg/BXFTA8bdC8KxFs4VhefCkJii4ziNNarvJSAppX0T1oWZPyF8sAuRrmQ5KauetO3XrNDTAyqSewIHjeD/KsYWIEZZjP1yFmIQJFvZdbHqvGwtVbTk5GXU16G3djz26JdeRdkkiWast6tXtQu9byHOJm9f6G4edx591yOxS/xEr5frrDgpW4J1SzHazpYTEpMEXWBqpjkImXlWNbPQ9LnqctQiNgun8IE3xwv75c71Ix37DSQMDjP3mj+q4dk2duKaFzbCNcaTOBkpT0afYYO3RNmzizCenJpDs7XbTlnnr2ndbxRxQ4svVcoTI73KkjHsGjgibRA3iXfR50/Ahbd/H5cbeI/kN8lOy3Bs+ddpW+yGB9ofZ73qMCionLQ6liPbhJedhbbfDJ85L4EQD2MlvSXRCADjXHsAtYSa+s+IBckoyhEmFjwKElSG2jOM6MnPYdj+k16KsGprITzjY9ekqjfdy6evqGHYZVVwlHcchMYNUvMz4CDXzXz7en34Z8oxuXwxMWB7ZmaN60o+xy3H4C8sfihICALoLeMPaWjYCwbBcbxmEW7x8WnFnXqbSLOust0pHURnqWrdCXSy4xI88YxH+iCr2ilLnwxDz54CQ6VQmXzt8OlKX4FGLAGLuYlw8RM7nCg2CB6ChYkru5TE9X5CrdxHkOIbl51fFltStr/vkFMQD20OGfGmdv/Yy5aidxCUGDe7boN1UZQaNgyWPoagkwP3GImkr5zg0P6u3netdJGMTIUhjIoccvWXtn7ujq09pgXp3JKVdM5zhKzrEHQC7aJn2z4J/qrlr1vIkTN/U0uqM7Ld6RRu5/q0rvY/SjOUNktoEDI8HDHzQv6EQx+vszBrCr+H7C3855+y1k2UXwBj7e8iMIC5Qddp7J9nXniizsHG5+Hn4aBxUwWEvwd9kUOuPjbiJQ0yY8fEzhUvLFkdyEa1CF+5AVP7Zr5bmj8LhKFCD+SUIdv+jZR+ZLBJHoFjkO+LgpOaANyqxZiF59RYOWsx5oPtg9JRkZ8kDbeCikVAni/PLdyg3PT+RaRQo0l7LcN8SSWP7WndGzV0N0fzs5sHUdVIa02gR53SG4ao4Av004gjoj5a0AX2NLAZ6ETd09keBijD1gz5JA7FavVOiatwyyIGD1dsD8tiZbFsIQh4B4s3ohKjjnRov1so469SkrLfMulzbdESPCl2aepsvQ6vCGduXKfSHY0pX7y18gMAseZFyFcpcno5mpurkkujich0vJ/QOfq6i9Ck0YOqR76DK//5IWyJVz1CWPLHIaYuUW6yzIj+w2yPoGXqihZ13MF/gKJCeOfuqrjxubx/HaeFWJiRteX+sq2LyFCcbykqezkBXWc/nAliZ4cvDFmBKXlQvsMtuaxZMY3xWnz2t+898cwq7RLYOE2ckGlOrU3DmiQ268xJTAjBgkqhkiG9w0BCRUxFgQUnUbOhajyC1k8kK5WFnEPttEB/d0wQTAxMA0GCWCGSAFlAwQCAQUABCDWhoLRZHE/VEqawxeCfMFkyVLSFQoEK4vcGmSHT6fMUAQIKF6Rn3fm4usCAggA"
     scripts:
       - name: 安装 XcodeGen 并生成工程
         script: |
           brew install xcodegen
           cd $CM_BUILD_DIR
           xcodegen generate
-      - name: 写入 ASC 签名密钥
+      - name: 配置签名材料（临时钥匙串 + 导入 p12）
         script: |
-          echo "$ASC_KEY_P8_B64" | base64 --decode > "$CM_BUILD_DIR/AuthKey.p8"
-          wc -c "$CM_BUILD_DIR/AuthKey.p8"
-      - name: Archive（编译 + 自动签名）
+          echo "$DH_DIST_P12_B64" | base64 --decode > /tmp/dh_dist.p12
+          KC="$HOME/Library/Keychains/dhbuild.keychain"
+          security delete-keychain dhbuild.keychain 2>/dev/null || true
+          security create-keychain -p dhbuild2026 "$KC"
+          security list-keychains -s "$KC"
+          security default-keychain -s "$KC"
+          security unlock-keychain -p dhbuild2026 "$KC"
+          security import /tmp/dh_dist.p12 -k "$KC" -P debatehub2026 \
+            -T /usr/bin/codesign -T /usr/bin/xcodebuild
+          security set-key-partition-list -S apple-tool:,apple: -k dhbuild2026 "$KC" > /dev/null
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+      - name: Archive（编译 + 手动签名）
         script: |
           cd $CM_BUILD_DIR
           xcodebuild archive \
@@ -36,39 +42,18 @@ workflows:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath /tmp/dh.xcarchive \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$CM_BUILD_DIR/AuthKey.p8" \
-            -authenticationKeyID "$ASC_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
-            CODE_SIGN_STYLE=Automatic \
-            DEVELOPMENT_TEAM=$DEVELOPMENT_TEAM
-      - name: 导出 Ad Hoc ipa
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="DebateHub AdHoc v2" \
+            DEVELOPMENT_TEAM=978G2M54F7 \
+            PRODUCT_BUNDLE_IDENTIFIER=com.debatehub.bianlun
+      - name: 打包 Ad Hoc ipa
         script: |
-          cd $CM_BUILD_DIR
-          cat > /tmp/exportOptions.plist <<'PL'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>ad-hoc</string>
-            <key>teamID</key>
-            <string>978G2M54F7</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
-            <key>stripSwiftSymbols</key>
-            <true/>
-          </dict>
-          </plist>
-          PL
-          xcodebuild -exportArchive \
-            -archivePath /tmp/dh.xcarchive \
-            -exportOptionsPlist /tmp/exportOptions.plist \
-            -exportPath "$CM_BUILD_DIR/ipa" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$CM_BUILD_DIR/AuthKey.p8" \
-            -authenticationKeyID "$ASC_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+          APP_PATH=$(ls -d /tmp/dh.xcarchive/Products/Applications/*.app | head -1)
+          mkdir -p /tmp/ipa/Payload
+          cp -R "$APP_PATH" /tmp/ipa/Payload/
+          cd /tmp/ipa && zip -qry bianlun.ipa Payload
+          cp bianlun.ipa "$CM_BUILD_DIR/"
     publishing:
       email:
         recipients:

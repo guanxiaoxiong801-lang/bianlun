@@ -79,7 +79,8 @@ struct CreateCaseView: View {
                 Text("正反方可接不同模型对辩；裁判团由服务端异构路由")
                     .font(.caption)
                     .foregroundStyle(Theme.textSub)
-            }            Section {
+            }
+            Section {
                 Button {
                     Task { await submit() }
                 } label: {

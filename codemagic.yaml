@@ -3,6 +3,7 @@
 #   - 分发证书 + 私钥：内联 DH_DIST_P12_B64（构建时导入临时钥匙串）
 #   - 描述文件：DebateHub AdHoc（已在苹果后台生成，含测试设备）
 #   - Bundle ID：com.debatehub.bianlun
+#   - 产物：构建后从 Codemagic 页面 Artifacts 区下载 bianlun.ipa（2026-09-28 修复描述文件名）
 
 workflows:
   ios-adhoc:
@@ -67,8 +68,6 @@ workflows:
           cd /tmp/ipa && zip -qry bianlun.ipa Payload
           cp bianlun.ipa "$CM_BUILD_DIR/"
     publishing:
-      artifacts:
-        - bianlun.ipa
       email:
         recipients:
           - guanht@china-yida.com

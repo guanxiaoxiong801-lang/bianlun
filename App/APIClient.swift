@@ -10,11 +10,11 @@ final class APIClient {
         return URLSession(configuration: cfg)
     }()
 
-    /// 后端地址（设置页可改；默认云端部署）
-    var baseURL: String {
-        get { UserDefaults.standard.string(forKey: "dh.baseURL") ?? "https://68abc6b6-f34b-4d64-9471-625267f5148c-5000.dev.coze.site" }
-        set { UserDefaults.standard.set(newValue.trimmingCharacters(in: .whitespacesAndNewlines), forKey: "dh.baseURL") }
-    }
+    /// 后端地址：编译期写死（App 内不暴露、不可改、用户零操作）。
+    /// 更换后端 = 改这里的常量后重新构建。
+    static let defaultBaseURL = "https://debatehub-backend.vercel.app"
+
+    private(set) var baseURL: String = APIClient.defaultBaseURL
 
     var authToken: String? { UserDefaults.standard.string(forKey: "dh.authToken") }
     var adminToken: String? { UserDefaults.standard.string(forKey: "dh.adminToken") }

@@ -25,7 +25,7 @@ struct PaywallView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("关闭") { dismiss() } } }
             .task {
-                plans = (try? APIClient.shared.plans()) ?? []
+                plans = (try? await APIClient.shared.plans()) ?? []
                 currentPlan = APIClient.shared.savedUser()?.usage.plan
                 loading = false
             }

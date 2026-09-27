@@ -2,6 +2,10 @@ import SwiftUI
 
 @main
 struct DebateHubApp: App {
+    init() {
+        // App 启动即探测可用后端（局域网优先，公网隧道兜底）
+        Task { await APIClient.shared.resolveBestBaseURL() }
+    }
     var body: some Scene {
         WindowGroup { RootView() }
     }

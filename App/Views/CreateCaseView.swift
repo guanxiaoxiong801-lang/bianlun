@@ -85,8 +85,8 @@ struct CreateCaseView: View {
             }
             .navigationTitle("发起辩论")
             .task {
-                scenarios = (try? api.scenarios()) ?? []
-                models = ((try? api.models()) ?? []).filter { $0.enabled && $0.available }
+                scenarios = (try? await api.scenarios()) ?? []
+                models = ((try? await api.models()) ?? []).filter { $0.enabled && $0.available }
                 if let pre = preselected { scenarioId = pre.scenarioId }
             }
             .navigationDestination(isPresented: $pushDebate) {

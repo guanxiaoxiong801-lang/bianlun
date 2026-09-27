@@ -38,7 +38,7 @@ struct PixelCourtView: View {
             let now = timeline.date
             ZStack {
                 courtBackground
-                hpBars
+                hpBars()
                 sprites(now: now)
                 objectionOverlay(now: now)
                 dialogueBox(now: now)
@@ -90,7 +90,7 @@ struct PixelCourtView: View {
     private func hpBars() -> some View {
         HStack {
             hpBar(name: "原告 HP", value: hpPlaintiff ?? 100,
-                  fill: LinearGradient(colors: [.accent, Color(red: 0.2, green: 0.88, blue: 0.72)],
+                  fill: LinearGradient(colors: [Theme.accent, Color(red: 0.2, green: 0.88, blue: 0.72)],
                                        startPoint: .leading, endPoint: .trailing))
             Spacer()
             Text(stepText)

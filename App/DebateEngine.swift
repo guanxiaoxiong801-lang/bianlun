@@ -53,29 +53,52 @@ final class DebateEngine: ObservableObject {
 
     // MARK: - 推进循环（原生驱动）
 
-    /// 逐步推进直到 completed；断网时等待恢复自动续跑。
+    /// 逐步推进直到 completed。
+    /// judgment 步（三裁判合议）耗时 60~180s，公网网关可能中途切断长请求：
+    /// 因此 advance 失败/超时后**不盲目重发**，转入 getCase 轮询模式——
+    /// 服务端状态机会继续执行，轮询直到 step_index 前进或 completed，天然幂等。
     func runToCompletion() async {
         guard !running else { return }
         running = true
         defer { running = false }
 
-        var backoff: UInt64 = 1_000_000_000   // 1s 起
+        var backoff: UInt64 = 2_000_000_000   // 2s 起
         while status != "completed" && status != "error" {
+            let beforeStep = stepIndex
             do {
                 let adv = try await api.advance(caseId)
-                backoff = 1_000_000_000
+                backoff = 2_000_000_000
                 apply(adv)
                 if adv.status == "completed" { break }
                 try? await Task.sleep(for: stepPace)
             } catch {
-                // 指数退避；离线时等网络恢复再继续，最多退到 32s
+                // 长请求被切断或网络抖动 → 轮询权威状态直到推进完成
                 connectionLost = true
-                try? await Task.sleep(for: .nanoseconds(backoff))
-                backoff = min(backoff * 2, 32_000_000_000)
-                if monitor.isOnline { connectionLost = false }
+                await pollUntilProgress(from: beforeStep)
+                connectionLost = false
+                backoff = 2_000_000_000
             }
         }
         await reload()
+    }
+
+    /// 轮询服务端权威状态：每 5s 一次，直到步数前进或辩论结束（上限 10 分钟）。
+    private func pollUntilProgress(from step: Int, timeoutSeconds: Int = 600) async {
+        let deadline = Date().addingTimeInterval(TimeInterval(timeoutSeconds))
+        while Date() < deadline {
+            try? await Task.sleep(for: .seconds(5))
+            guard let detail = try? await api.getCase(caseId) else { continue }
+            status = detail.status
+            messages = detail.messages
+            stepIndex = detail.stepIndex
+            stepTotal = max(stepTotal, detail.messages.count)
+            if let v = detail.verdict { verdict = v }
+            if detail.stepIndex > step || detail.status == "completed"
+                || detail.status == "error" {
+                rebuildHP()
+                return
+            }
+        }
     }
 
     /// 人民陪审员插话（原生入口，服务端 /interrupt）。

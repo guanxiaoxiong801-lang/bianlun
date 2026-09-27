@@ -26,9 +26,8 @@ struct VerdictView: View {
 
     private func load() async {
         do {
-            let r = try await APIClient.shared.getVerdict(caseId)
-            verdict = r.verdict
-            mockUsed = r.mockUsed
+            verdict = try await APIClient.shared.verdict(caseId)
+            mockUsed = false
         } catch {
             self.error = (error as? LocalizedError)?.errorDescription ?? "加载失败"
         }
@@ -140,7 +139,7 @@ struct VerdictView: View {
         .cornerRadius(12)
     }
 
-    private func bullet(_ text: Text) -> some View {
+    private func bullet(_ text: some View) -> some View {
         HStack(alignment: .top, spacing: 6) {
             Text("·").foregroundStyle(Theme.accent)
             text.foregroundStyle(Theme.textMain)

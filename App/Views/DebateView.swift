@@ -209,9 +209,19 @@ struct MessageRow: View {
         HStack {
             if isHuman { Spacer(minLength: 40) }
             VStack(alignment: isHuman ? .trailing : .leading, spacing: 3) {
-                Text(Theme.speakerName(message.speaker) + " · " + message.stage)
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundStyle(Theme.textSub)
+                HStack(spacing: 5) {
+                    Text(Theme.speakerName(message.speaker) + " · " + message.stage)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(Theme.textSub)
+                    if let model = message.model, !model.isEmpty {
+                        Text(model)
+                            .font(.system(size: 9, design: .monospaced).bold())
+                            .padding(.horizontal, 5).padding(.vertical, 1)
+                            .background(Theme.accent.opacity(0.18))
+                            .foregroundStyle(Theme.accent)
+                            .cornerRadius(4)
+                    }
+                }
                 Text(message.content)
                     .font(.subheadline)
                     .foregroundStyle(isHuman ? Theme.textMain : Theme.textMain)

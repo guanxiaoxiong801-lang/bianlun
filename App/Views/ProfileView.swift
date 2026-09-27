@@ -8,8 +8,6 @@ struct ProfileView: View {
 
     @State private var showLogin = false
     @State private var health: HealthInfo?
-    @State private var baseURL = APIClient.shared.baseURL
-    @State private var saved = false
 
     private let api = APIClient.shared
 
@@ -115,29 +113,23 @@ struct ProfileView: View {
         }
     }
 
-    // MARK: 设置
+    // MARK: 连接状态（后端地址已内置，用户零配置）
 
     private var settingsSection: some View {
-        Section("后端服务器") {
-            TextField("https://…", text: $baseURL)
-                .keyboardType(.URL)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-            Button("保存并检测连接") {
-                api.baseURL = baseURL
-                Task {
-                    health = try? await api.health()
-                    saved = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { saved = false }
-                }
+        Section("服务连接") {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(health != nil ? Color.green : Color.red)
+                    .frame(width: 8, height: 8)
+                Text(health != nil
+                     ? (health?.mockMode == true ? "已连接（演示模式）" : "已连接 · 服务正常")
+                     : "连接中…")
+                    .font(.subheadline)
             }
-            if let health {
-                Text(health.mockMode ? "已连接（Mock 演示模式）" : "已连接（真实模型在线）")
+            if let h = health {
+                Text("模型服务：\\(h.availableVendors.joined(separator: \", \"))")
                     .font(.caption)
-                    .foregroundStyle(Theme.accent)
-            }
-            if saved {
-                Text("已保存").font(.caption).foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.textSub)
             }
         }
     }

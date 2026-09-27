@@ -47,7 +47,6 @@ struct DebateView: View {
                 }
             }
         }
-        .hideKeyboardOnTap()
         .task { await loadAll() }
         .onDisappear { engine.running = false }
     }

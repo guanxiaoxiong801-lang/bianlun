@@ -125,8 +125,8 @@ struct VerdictView: View {
         }
     }
 
-    @ViewBuilder
-    private func section(_ title: String, @ViewBuilder content: () -> some View) {
+    private func section<Content: View>(_ title: String,
+                                        @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.headline)
@@ -139,7 +139,7 @@ struct VerdictView: View {
         .cornerRadius(12)
     }
 
-    private func bullet(_ text: some View) -> some View {
+    private func bullet<BulletContent: View>(_ text: BulletContent) -> some View {
         HStack(alignment: .top, spacing: 6) {
             Text("·").foregroundStyle(Theme.accent)
             text.foregroundStyle(Theme.textMain)

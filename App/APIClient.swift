@@ -10,11 +10,29 @@ final class APIClient {
         return URLSession(configuration: cfg)
     }()
 
-    /// 后端地址：编译期写死（App 内不暴露、不可改、用户零操作）。
-    /// 更换后端 = 改这里的常量后重新构建。
-    static let defaultBaseURL = "https://arrange-calls-midwest-inspection.trycloudflare.com"
+    /// 后端地址候选（按优先级）：编译期写死，App 内不暴露、用户零操作。
+    /// 第一个 /api/health 探测成功的地址自动生效；运行中失败自动切换下一个。
+    static let candidateBaseURLs: [String] = [
+        "http://10.10.10.184:8001",                                   // 同一 Wi-Fi 局域网直连（最快最稳）
+        "https://arrange-calls-midwest-inspection.trycloudflare.com", // 公网隧道（电脑开着时可用）
+    ]
 
-    private(set) var baseURL: String = APIClient.defaultBaseURL
+    private(set) var baseURL: String = APIClient.candidateBaseURLs.first ?? ""
+
+    /// 探测所有候选地址，锁定第一个可用的（App 启动时调用一次）。
+    func resolveBestBaseURL() async {
+        for candidate in APIClient.candidateBaseURLs {
+            var req = URLRequest(url: URL(string: candidate + "/api/health")!)
+            req.timeoutInterval = 4
+            if let (_, resp) = try? await session.data(for: req),
+               let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) {
+                baseURL = candidate
+                return
+            }
+        }
+        // 全部不可达：保持第一个候选（UI 会显示未连接）
+        baseURL = APIClient.candidateBaseURLs.first ?? baseURL
+    }
 
     var authToken: String? { UserDefaults.standard.string(forKey: "dh.authToken") }
     var adminToken: String? { UserDefaults.standard.string(forKey: "dh.adminToken") }

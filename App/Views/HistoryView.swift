@@ -62,8 +62,8 @@ private struct HistoryRow: View {
 
     private var statusLabel: (String, Color) {
         switch detail.status {
-        case "completed": return ("已结案", .accent)
-        case "running": return ("进行中", .gold)
+        case "completed": return ("已结案", Theme.accent)
+        case "running": return ("进行中", Theme.gold)
         case "error": return ("中断", Theme.danger)
         default: return ("待开始", Theme.textSub)
         }

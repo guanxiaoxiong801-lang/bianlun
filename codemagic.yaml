@@ -36,6 +36,10 @@ workflows:
             -T /usr/bin/codesign -T /usr/bin/xcodebuild
           security set-key-partition-list -S apple-tool:,apple: -k dhbuild2026 "$KC" > /dev/null
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+      - name: 写入 ASC 签名密钥（供 xcodebuild 拉取描述文件）
+        script: |
+          echo "$ASC_KEY_P8_B64" | base64 --decode > "$CM_BUILD_DIR/AuthKey.p8"
+          wc -c "$CM_BUILD_DIR/AuthKey.p8"
       - name: Archive（编译 + 手动签名）
         script: |
           cd $CM_BUILD_DIR

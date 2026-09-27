@@ -126,7 +126,7 @@ struct ProfileView: View {
             Button("保存并检测连接") {
                 api.baseURL = baseURL
                 Task {
-                    health = try? api.health()
+                    health = try? await api.health()
                     saved = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { saved = false }
                 }

@@ -23,3 +23,8 @@ enum Theme {
         }
     }
 }
+
+
+extension Notification.Name {
+    static let openPaywall = Notification.Name("openPaywall")
+}

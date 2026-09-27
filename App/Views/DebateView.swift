@@ -20,7 +20,7 @@ struct DebateView: View {
     @State private var verdictReady = false
     @State private var interruptText = ""
     @State private var error = ""
-    @State private var pollTask: Task<Void, Never>?
+    @StateObject private var engine = DebateEngine()
     @State private var evidence: [EvidenceItem] = []
     @State private var newEvidence = ""
 
@@ -138,33 +138,21 @@ struct DebateView: View {
     }
 
     private func startPolling() {
-        guard pollTask == nil || pollTask?.isCancelled == true else { return }
+        guard !running else { return }
         running = true
         error = ""
-        pollTask = Task {
+        Task {
             do {
                 if status == "pending" { try await api.startCase(caseId) }
-                while !Task.isCancelled {
-                    let p = try await api.advance(caseId)
-                    stepIndex = p.stepIndex
-                    stepTotal = p.totalSteps
-                    status = p.status
-                    speaker = p.currentSpeaker
-                    if !p.lastOutput.isEmpty {
-                        lastOutput = p.lastOutput
-                        if !messages.contains(where: { $0.content == p.lastOutput }) {
-                            messages.append(DebateMessage(speaker: p.currentSpeaker,
-                                                          stage: p.currentStage,
-                                                          content: p.lastOutput, round: 0))
-                        }
-                    }
-                    if p.currentStage == "summary" || p.status == "completed" {
-                        objection = true
-                        await refreshHP()
-                    }
-                    if p.verdict != nil { verdictReady = true }
-                    if p.status == "completed" || p.status == "error" { break }
-                }
+                await engine.bind(caseId: caseId)
+                await engine.runToCompletion()
+                // 同步引擎状态回本地展示变量（保持 UI 兼容）
+                status = engine.status
+                messages = engine.messages
+                stepIndex = engine.stepIndex
+                stepTotal = engine.stepTotal
+                verdictReady = engine.verdict != nil
+                if engine.verdict != nil { objection = true }
                 running = false
             } catch is CancellationError {
             } catch {

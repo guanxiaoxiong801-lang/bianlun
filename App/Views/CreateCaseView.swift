@@ -23,7 +23,7 @@ struct CreateCaseView: View {
     private let api = APIClient.shared
 
     var body: some View {
-        NavigationStack {
+        Group {
             Form {
                 Section("场景") {
                     Picker("场景", selection: $scenarioId) {
@@ -93,6 +93,7 @@ struct CreateCaseView: View {
                     }
                 }
             }
+            .hideKeyboardOnTap()
             .navigationTitle("发起辩论")
             .task {
                 scenarios = (try? await api.scenarios()) ?? []

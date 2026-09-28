@@ -154,6 +154,45 @@ final class APIClient {
     func advance(_ caseId: String) async throws -> AdvancePayload {
         try await request(AdvancePayload.self, path: "/api/cases/\(caseId)/advance", method: "POST")
     }
+
+
+    /// SSE stream2
+    func sseEvents(caseId: String) -> AsyncThrowingStream<(String, String), Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                let urlStr = baseURL + "/api/cases/" + caseId + "/stream2"
+                var req = URLRequest(url: URL(string: urlStr)!)
+                req.timeoutInterval = 3600
+                if let bearer = authToken {
+                    req.setValue("Bearer " + bearer, forHTTPHeaderField: "Authorization")
+                }
+                let (bytes, resp) = try await session.bytes(for: req)
+                guard let http = resp as? HTTPURLResponse,
+                      (200..<300).contains(http.statusCode) else {
+                    throw APIError.network(baseURL)
+                }
+                var eventName = ""
+                var dataBuf = ""
+                for try await line in bytes.lines {
+                    if line.hasPrefix("event:") {
+                        eventName = String(line.dropFirst(6)).trimmingCharacters(in: .whitespaces)
+                    } else if line.hasPrefix("data:") {
+                        dataBuf += String(line.dropFirst(5)).trimmingCharacters(in: .whitespaces)
+                    } else if line.isEmpty {
+                        if !eventName.isEmpty { continuation.yield((eventName, dataBuf)) }
+                        eventName = ""
+                        dataBuf = ""
+                    }
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+
+
+
     func interrupt(_ caseId: String, speaker: String, content: String) async throws {
         struct R: Codable {}
         _ = try await request(R.self, path: "/api/cases/\(caseId)/interrupt",

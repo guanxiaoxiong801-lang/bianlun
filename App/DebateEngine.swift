@@ -192,7 +192,7 @@ extension DebateEngine {
                         stepTotal = max(stepTotal, obj.totalSteps)
                         speaker = obj.currentSpeaker
                         if let out = obj.lastOutput, !out.isEmpty,
-                           !messages.contains(where: { .content == out }) {
+                           !messages.contains(where: { $0.content == out }) {
                             messages.append(DebateMessage(speaker: obj.currentSpeaker,
                                                           stage: obj.currentStage,
                                                           content: out, round: 0,

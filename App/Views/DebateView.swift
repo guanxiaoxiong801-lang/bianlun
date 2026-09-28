@@ -79,6 +79,21 @@ struct DebateView: View {
                 ForEach(messages) { m in
                     MessageRow(message: m)
                 }
+                if !engine.liveText.isEmpty {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(Theme.speakerName(engine.liveSpeaker.isEmpty ? speaker : engine.liveSpeaker) + " · 正在发言…")
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(Theme.textSub)
+                        Text(engine.liveText)
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.textMain)
+                            .lineSpacing(3)
+                    }
+                    .padding(10)
+                    .background(Theme.card)
+                    .cornerRadius(12)
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.accent.opacity(0.4), lineWidth: 1))
+                }
                 if running { ProgressView().tint(Theme.accent).padding(8) }
                 if status == "completed" {
                     Text("辩论已结束")

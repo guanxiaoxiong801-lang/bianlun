@@ -12,8 +12,8 @@ settings:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: "978G2M54F7"
     CODE_SIGN_STYLE: Automatic
-    MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "1.1.0"
+    CURRENT_PROJECT_VERSION: "2"
     INFOPLIST_KEY_UILaunchScreen_Generation: YES
     INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
     INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
@@ -27,6 +27,7 @@ targets:
       - App
     resources:
       - Resources/Assets.xcassets
+      - Resources/debate_topics_v1.json
     info:
       path: App/Info.plist
       properties:
@@ -35,8 +36,10 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        NSPhotoLibraryAddUsageDescription: 保存判决海报图片到相册需要访问相册权限
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: false
+          NSAllowsLocalNetworking: true
 schemes:
   DebateHub:
     build:

@@ -2,14 +2,15 @@ import SwiftUI
 
 /// 全局主题（暗色法庭风：深蓝底 + 青色强调，与 Web/移动端一致）。
 enum Theme {
-    static let background = Color(red: 0.05, green: 0.08, blue: 0.15)      // #0d1526
-    static let card = Color(red: 0.06, green: 0.10, blue: 0.18)            // #0f1a2e
-    static let line = Color(red: 0.18, green: 0.24, blue: 0.33)            // #2f3d55
-    static let accent = Color(red: 0.0, green: 0.83, blue: 0.67)           // #00d4aa
+    // V21「月下辩城」皮肤：深紫夜底 + 鎏金强调（2026-09-29 全端统一，与 Web /town 一致）
+    static let background = Color(red: 0.08, green: 0.05, blue: 0.13)      // #140d22 深紫夜
+    static let card = Color(red: 0.11, green: 0.08, blue: 0.19)            // #1d1530 紫檀卡面
+    static let line = Color(red: 0.29, green: 0.24, blue: 0.41)            // #4a3c68 暮紫描线
+    static let accent = Color(red: 0.83, green: 0.69, blue: 0.35)          // #d4af5a 鎏金
     static let textMain = Color.white
-    static let textSub = Color(red: 0.54, green: 0.63, blue: 0.72)         // #8aa0b8
-    static let danger = Color(red: 0.97, green: 0.44, blue: 0.44)
-    static let gold = Color(red: 1.0, green: 0.82, blue: 0.4)
+    static let textSub = Color(red: 0.71, green: 0.66, blue: 0.80)         // #b5a8cc 月雾紫
+    static let danger = Color(red: 0.88, green: 0.32, blue: 0.32)
+    static let gold = Color(red: 1.0, green: 0.91, blue: 0.66)             // #ffe9a8 月光金
 
     static func speakerName(_ raw: String) -> String {
         switch raw {

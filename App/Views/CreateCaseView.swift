@@ -20,6 +20,8 @@ struct CreateCaseView: View {
     @State private var error = ""
     @State private var doneCaseId: String?
     @State private var pushDebate = false
+    @State private var suggestions: [String] = []   // 🎲 随机选题候选
+    @State private var topicError = ""              // 随机选题失败原因（弹窗展示）
 
     private let api = APIClient.shared
 
@@ -41,6 +43,29 @@ struct CreateCaseView: View {
                 }
             }
             Section("辩题") {
+                Button {
+                    pickRandomTopics()
+                } label: {
+                    Text("🎲 随机选题")
+                        .bold()
+                        .foregroundStyle(Theme.accent)
+                }
+                ForEach(suggestions, id: \.self) { topic in
+                    Button {
+                        applySuggestion(topic)
+                    } label: {
+                        Text(topic)
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.textMain)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                if !suggestions.isEmpty {
+                    Text("点一条填入辩题，并带出背景描述提示；再次点击「随机选题」换一批。")
+                        .font(.caption)
+                        .foregroundStyle(Theme.textSub)
+                }
                 TextField("例如：公司单方解除劳动合同是否合法", text: $title)
                     .keyboardDoneButton()
                 TextField("背景描述（事实经过、争议起因）", text: $description, axis: .vertical)
@@ -108,6 +133,34 @@ struct CreateCaseView: View {
         .task { await loadAll() }
         .navigationDestination(isPresented: $pushDebate) {
             DebateView(caseId: doneCaseId ?? "")
+        }
+        .alert("随机选题失败", isPresented: Binding(
+            get: { !topicError.isEmpty },
+            set: { if !$0 { topicError = "" } })) {
+            Button("知道了", role: .cancel) {}
+        } message: {
+            Text(topicError)
+        }
+    }
+
+    /// 🎲 从当前场景随机抽 3 条候选辩题；失败时清空候选并把原因放入 topicError（Bundle 缺 JSON 时含排查提示）。
+    private func pickRandomTopics() {
+        do {
+            suggestions = try TopicStore.randomThree(scenario: scenarioId)
+            topicError = ""
+        } catch {
+            suggestions = []
+            topicError = (error as? LocalizedError)?.errorDescription
+                ?? "随机选题失败：辩题库 debate_topics_v1.json 未打包或损坏，请检查 iOS target 资源设置"
+        }
+    }
+
+    /// 点选候选辩题：辩题填入 title（已有输入保留在其后，不覆盖丢失），描述为空时带出提示模板。
+    private func applySuggestion(_ topic: String) {
+        title = title.trimmingCharacters(in: .whitespaces).isEmpty
+            ? topic : title + " " + topic
+        if description.trimmingCharacters(in: .whitespaces).isEmpty {
+            description = "辩题「\(topic)」由随机选题带出，请补充事实经过、争议起因与关键细节。"
         }
     }
 

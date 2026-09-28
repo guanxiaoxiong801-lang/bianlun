@@ -29,7 +29,7 @@ struct PixelCourtView: View {
         "G": Color(red: 0.94, green: 0.79, blue: 0.29),
         "d": Color(red: 0.06, green: 0.09, blue: 0.16),
         "h": Color(red: 0.29, green: 0.21, blue: 0.13),
-        "c": Color(red: 0.05, green: 0.65, blue: 0.63),
+        "c": Color(red: 0.83, green: 0.69, blue: 0.35),  // V21 鎏金
         "e": Color(red: 0.07, green: 0.07, blue: 0.07),
     ]
 
@@ -44,7 +44,7 @@ struct PixelCourtView: View {
                 dialogueBox(now: now)
             }
         }
-        .background(Color(red: 0.04, green: 0.07, blue: 0.13))
+        .background(Color(red: 0.08, green: 0.05, blue: 0.13))  // V21 月下紫夜
         .onChange(of: text) { newValue in
             if newValue != lastText {
                 lastText = newValue

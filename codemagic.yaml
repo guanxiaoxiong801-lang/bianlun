@@ -3,7 +3,6 @@
 #   - 分发证书 + 私钥：内联 DH_DIST_P12_B64（构建时导入临时钥匙串）
 #   - 描述文件：DebateHub AdHoc（已在苹果后台生成，含测试设备）
 #   - Bundle ID：com.debatehub.bianlun
-#   - 产物：构建后从 Codemagic 页面 Artifacts 区下载 bianlun.ipa（2026-09-28 修复描述文件名）
 
 workflows:
   ios-adhoc:
@@ -26,34 +25,17 @@ workflows:
           xcodegen generate
       - name: 配置签名材料（临时钥匙串 + 导入 p12）
         script: |
-          echo "B64 len=${#DH_DIST_P12_B64}"
-          printf '%s' "$DH_DIST_P12_B64" | base64 --decode -o /tmp/dh_dist.p12 || \
-            printf '%s' "$DH_DIST_P12_B64" | base64 -D -o /tmp/dh_dist.p12 || echo "DECODE FAILED"
-          ls -l /tmp/dh_dist.p12
+          echo "$DH_DIST_P12_B64" | base64 --decode > /tmp/dh_dist.p12
           KC="$HOME/Library/Keychains/dhbuild.keychain"
           security delete-keychain dhbuild.keychain 2>/dev/null || true
           security create-keychain -p dhbuild2026 "$KC"
           security list-keychains -s "$KC"
           security default-keychain -s "$KC"
           security unlock-keychain -p dhbuild2026 "$KC"
-          # --- 主路径：security import p12（若 PBES2 兼容则直接成功）---
-          if security import /tmp/dh_dist.p12 -k "$KC" -P debatehub2026 \
-              -T /usr/bin/codesign -T /usr/bin/xcodebuild 2>/dev/null; then
-            echo "p12 import OK"
-          else
-            echo "p12 import failed (PBES2 兼容性)，改走 openssl 解包 PEM 导入"
-            # macOS 自带 openssl(LibreSSL) 解 p12（PKCS12 MAC 由 OpenSSL 处理，兼容性更好）
-            openssl pkcs12 -in /tmp/dh_dist.p12 -nocerts -nodes -passin pass:debatehub2026 \
-              -out /tmp/dh_key.pem
-            openssl pkcs12 -in /tmp/dh_dist.p12 -nokeys -passin pass:debatehub2026 \
-              -out /tmp/dh_cert.pem
-            security import /tmp/dh_key.pem -k "$KC" -T /usr/bin/codesign -T /usr/bin/xcodebuild
-            security import /tmp/dh_cert.pem -k "$KC"
-          fi
+          security import /tmp/dh_dist.p12 -k "$KC" -P debatehub2026 \
+            -T /usr/bin/codesign -T /usr/bin/xcodebuild
           security set-key-partition-list -S apple-tool:,apple: -k dhbuild2026 "$KC" > /dev/null
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-          echo "== find-identity =="
-          security find-identity -v -p codesigning "$KC" || true
       - name: 写入 ASC 签名密钥（供 xcodebuild 拉取描述文件）
         script: |
           echo "$ASC_KEY_P8_B64" | base64 --decode > "$CM_BUILD_DIR/AuthKey.p8"
@@ -85,8 +67,8 @@ workflows:
           cd /tmp/ipa && zip -qry bianlun.ipa Payload
           cp bianlun.ipa "$CM_BUILD_DIR/"
     publishing:
+      artifacts:
+        - bianlun.ipa
       email:
         recipients:
           - guanht@china-yida.com
-    artifacts:
-      - bianlun.ipa

@@ -8,6 +8,8 @@ struct VerdictView: View {
     @State private var mockUsed = false
     @State private var error = ""
     @State private var loading = true
+    @State private var caseTitle = ""
+    @State private var showPoster = false
 
     var body: some View {
         ScrollView {
@@ -19,6 +21,29 @@ struct VerdictView: View {
             .padding(16)
         }
         .background(Theme.background)
+        .safeAreaInset(edge: .bottom) {
+            if verdict != nil {
+                Button {
+                    showPoster = true
+                } label: {
+                    Label("生成分享海报", systemImage: "photo.badge.arrow.down")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(12)
+                        .background(Theme.accent)
+                        .foregroundStyle(Theme.background)
+                        .cornerRadius(12)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Theme.background)
+            }
+        }
+        .sheet(isPresented: $showPoster) {
+            if let v = verdict {
+                VerdictPosterView(title: caseTitle, verdict: v)
+            }
+        }
         .navigationTitle("裁判意见书")
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
@@ -26,8 +51,10 @@ struct VerdictView: View {
 
     private func load() async {
         do {
+            async let caseFetch = APIClient.shared.getCase(caseId)
             verdict = try await APIClient.shared.verdict(caseId)
             mockUsed = false
+            caseTitle = (try? await caseFetch)?.title ?? ""
         } catch {
             self.error = (error as? LocalizedError)?.errorDescription ?? "加载失败"
         }

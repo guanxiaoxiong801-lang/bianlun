@@ -117,7 +117,7 @@ struct VerdictPosterCanvas: View {
     let verdict: VerdictDoc
 
     /// 深色法庭风配色（海报专用，与规范一致）。
-    private let bg = Color(red: 0x0B / 255.0, green: 0x12 / 255.0, blue: 0x20 / 255.0)      // #0B1220
+    private let bg = Color(red: 0x14 / 255.0, green: 0x0D / 255.0, blue: 0x22 / 255.0)      // #140D22 V21 月下紫夜
     private let card = Color(red: 0x14 / 255.0, green: 0x1C / 255.0, blue: 0x2E / 255.0)    // #141C2E
     private let gold = Color(red: 0xD4 / 255.0, green: 0xAF / 255.0, blue: 0x37 / 255.0)    // #D4AF37
     private let blue = Color(red: 0x4A / 255.0, green: 0x90 / 255.0, blue: 0xD9 / 255.0)    // #4A90D9

@@ -66,9 +66,9 @@ workflows:
           cp -R "$APP_PATH" /tmp/ipa/Payload/
           cd /tmp/ipa && zip -qry bianlun.ipa Payload
           cp bianlun.ipa "$CM_BUILD_DIR/"
+    artifacts:
+      - bianlun.ipa
     publishing:
-      artifacts:
-        - bianlun.ipa
       email:
         recipients:
           - guanht@china-yida.com

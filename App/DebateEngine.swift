@@ -23,6 +23,9 @@ final class DebateEngine: ObservableObject {
     @Published var verdict: VerdictDoc?
     @Published var running = false
     @Published var connectionLost = false
+    @Published var liveText = ""          // SSE 打字机当前片段
+    @Published var liveSpeaker = ""       // 当前发言方
+    @Published var useSSE = true          // SSE 不可用时自动降级
 
     /// 每步之间的人为停顿（直播观感；真实模型单步 20~60s，另计）
     var stepPace: Duration = .milliseconds(400)
@@ -61,6 +64,12 @@ final class DebateEngine: ObservableObject {
         guard !running else { return }
         running = true
         defer { running = false }
+
+        if useSSE {
+            await runViaSSE()
+            if status == "completed" || status == "error" { running = false; return }
+            useSSE = false // SSE 失败降级
+        }
 
         var backoff: UInt64 = 2_000_000_000   // 2s 起
         while status != "completed" && status != "error" {
@@ -160,3 +169,62 @@ final class NetworkMonitor: ObservableObject {
         monitor.start(queue: queue)
     }
 }
+
+// MARK: - SSE 流式直播（打字机效果）
+
+extension DebateEngine {
+    /// 连接 /stream2 消费 delta/step/done 事件；断流降级 advance 模式。
+    func runViaSSE() async {
+        do {
+            for try await (event, data) in api.sseEvents(caseId: caseId) {
+                let jsonData = Data(data.utf8)
+                switch event {
+                case "delta":
+                    if let obj = try? JSONDecoder().decode(DeltaEvent.self, from: jsonData) {
+                        liveText += obj.text
+                    }
+                case "step":
+                    if let obj = try? JSONDecoder().decode(StepEvent.self, from: jsonData) {
+                        liveText = ""
+                        liveSpeaker = ""
+                        status = obj.status
+                        stepIndex = obj.stepIndex
+                        stepTotal = max(stepTotal, obj.totalSteps)
+                        speaker = obj.currentSpeaker
+                        if let out = obj.lastOutput, !out.isEmpty,
+                           !messages.contains(where: { .content == out }) {
+                            messages.append(DebateMessage(speaker: obj.currentSpeaker,
+                                                          stage: obj.currentStage,
+                                                          content: out, round: 0,
+                                                          model: obj.model))
+                        }
+                        rebuildHP()
+                    }
+                case "done":
+                    status = (try? JSONDecoder().decode(DoneEvent.self, from: jsonData))?.status ?? "completed"
+                    await reload()
+                    return
+                case "error":
+                    status = "error"
+                    return
+                default: break
+                }
+            }
+        } catch {
+            await reload() // 断流降级
+        }
+    }
+}
+
+struct DeltaEvent: Codable { var text: String }
+struct StepEvent: Codable {
+    var status: String
+    var currentStage: String
+    var currentSpeaker: String
+    var stepIndex: Int
+    var totalSteps: Int
+    var lastOutput: String?
+    var model: String?
+}
+struct DoneEvent: Codable { var status: String }
+

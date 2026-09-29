@@ -12,17 +12,10 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
-
-      - name: Select Xcode 16
-        run: |
-          ls /Applications | grep -i xcode || true
-          sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer || sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer || true
-          xcodebuild -version
-          xcodegen --version
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -101,4 +94,5 @@ jobs:
           name: bianlun-ipa
           path: bianlun.ipa
           retention-days: 30
+
 
